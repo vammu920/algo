@@ -1,0 +1,129 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+
+typedef struct _treenode {
+char * route ;
+struct _treenode * left ;
+struct _treenode * right ;
+int height ;
+} AVLtreenode ;
+
+
+typedef AVLtreenode * AVLtree ;
+
+AVLtreenode * create(char *arr){
+	AVLtree tem = (AVLtree)malloc(sizeof(AVLtreenode));
+	tem -> route = arr;
+	tem -> left = tem -> right = NULL;
+	tem -> height = 1;
+	return tem;
+}
+
+AVLtreenode * leftRotate(AVLtree root){
+	AVLtree tem = (AVLtree)malloc(sizeof(AVLtreenode));
+	tem -> route = root -> route;
+	tem -> left = root -> left;
+	tem -> right = root -> right;
+	tem -> height = root -> height;
+	root -> route = root -> right -> route;
+	root -> height = root -> right -> height;
+	root -> left = root -> right;
+	root -> right = root -> right -> right;
+	root -> left -> right = tem ->right ->left;
+	root -> left -> left = tem -> left;
+	root -> left -> route = tem -> route;
+	root -> left -> height = tem -> height;
+	free(tem);
+	return root;
+}
+
+AVLtreenode * rightRotate(AVLtree root){
+	AVLtree tem = (AVLtree)malloc(sizeof(AVLtreenode));
+	tem -> route = root -> route;
+	tem -> left = root -> left;
+	tem -> right = root -> right;
+	tem -> height = root -> height;
+	root -> route = root -> left -> route;
+	root -> height = root -> left -> height;
+	root -> right = root -> left;
+	root -> left = root -> left -> left;
+	root -> right -> left = tem -> left -> right;
+	root -> right -> right = tem -> right ;
+	root -> right -> height = tem -> height;
+	root -> right -> route = tem -> route; 
+	free(tem);
+	return root;
+}
+
+int treeHeight(AVLtree root){
+	if(root == NULL) return 0;
+	else return root-> height; 
+}
+
+int max(int a,int b){
+	if(a>b) return a;
+	else return b;
+}
+
+AVLtreenode * insert(AVLtree root,char * arr){
+	if(root == NULL){
+		AVLtree tem = create(arr);
+		return tem;
+	}
+	int diff = strcmp(arr,root -> route);
+	if(diff < 0 ) root -> left = insert(root -> left ,arr);
+	else if(diff > 0) root -> right = insert(root -> right,arr);
+	else return root;
+	root -> height = 1+ max(treeHeight(root -> left),treeHeight(root -> right));
+	int balance = treeHeight(root->left) - treeHeight(root -> right);
+	if(balance < -1 && strcmp(root -> right -> route,arr) < 0) root = leftRotate(root);
+	else if(balance > 1 && strcmp(root -> left -> route, arr)>0) root = rightRotate(root);
+	else if(balance < -1 && strcmp(root -> right -> route,arr) > 0){
+		root -> right = rightRotate(root -> right);
+		root = leftRotate(root);
+	}
+	else if(balance > 1 && strcmp(root -> left -> route,arr) < 0){
+		root -> left = leftRotate(root -> left);
+		root = rightRotate(root);
+	}
+	return root;
+}
+
+void fpinOrder(AVLtree root,FILE *fp){
+	if(root == NULL) return;
+	fprintf(fp,"%s\n",root -> route);
+	fpinOrder(root -> left,fp);
+	fpinOrder(root -> right,fp);
+}
+
+
+int main(){
+	int n,i,j,k;
+	char arr1[20];
+	AVLtree root = NULL;
+	FILE *fp1 = fopen("Routes.txt","r");
+	fscanf(fp1,"%d\n",&n);
+	char arr2[n][20];
+	for(i = 0;i < n;i++){
+		fscanf(fp1,"%s",arr1);
+		j = k  = 1;
+		arr2[i][0] = arr1[0];
+		while(arr1[j] != '\0' && arr1[j] != '\n') {
+			if(arr1[j] == arr2[i][k-1]) j++;
+			else {
+				arr2[i][k] = arr1[j];
+				j++,k++;
+			}
+		}
+		arr2[i][k] = '\0';
+		root = insert(root,&arr2[i][0]);
+	}
+	fclose(fp1);
+	fp1 = fopen("output.txt","a");
+	fprintf(fp1,"%d\n",treeHeight(root));
+	fpinOrder(root,fp1);
+	fclose(fp1);
+	return 0;
+}
