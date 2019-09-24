@@ -20,7 +20,7 @@ void search(stuct node* root, int data){
 	return search(root->left, data);
 }
 void inorder(struct node* root){
-	
+	//these are the changes that iam making
 }
 void main(){
 	struct node* root=newNode(1);
